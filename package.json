@@ -1,0 +1,22 @@
+{
+  "name": "npm-smart-login",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@inquirer/prompts": "^8.6.0",
+    "@types/node": "^26.3.0",
+    "chalk": "^6.0.0",
+    "execa": "^10.0.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  }
+}
