@@ -177,9 +177,17 @@ async function cmdExec(account: string, args: string[]) {
     process.exit(1);
   }
 
-  const [cmd, ...cmdArgs] = args;
+  let [cmd, ...cmdArgs] = args;
   
   console.log(chalk.cyan(`⚙️  Executando "${cmd} ${cmdArgs.join(' ')}" usando o perfil '${account}'...`));
+
+  // Magia: Se for um comando de publish, o NPM/PNPM em um terminal não-interativo (ex: agentes)
+  // bloqueia o link do WebAuthn e exige OTP. Para forçar ele a cuspir o link, simulamos um TTY com 'script'.
+  if ((cmd === 'npm' || cmd === 'pnpm') && cmdArgs.includes('publish')) {
+    console.log(chalk.yellow(`🪄  Modo Publish detectado. Forçando TTY interativo para exibir o link de aprovação (WebAuthn)...`));
+    cmdArgs = ['-q', '/dev/null', cmd, ...cmdArgs];
+    cmd = 'script';
+  }
   
   try {
     await execa(cmd, cmdArgs, {
