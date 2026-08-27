@@ -35,6 +35,9 @@ npm-smart-login exec <conta> <comando>
 # Exemplo: npm-smart-login exec trabalho pnpm publish
 # Exemplo: npm-smart-login exec pessoal pnpm install @meu-pacote-privado
 ```
+> **🪄 Mágica para Agentes e CI (WebAuthn):** O NPM baniu tokens de Bypass 2FA para publicação direta. Ao rodar um comando de `publish` em terminais não-interativos (como agentes autônomos), o registry bloqueia e esconde a URL de aprovação Web. 
+> 
+> O `npm-smart-login exec` resolve isso automaticamente: se ele detectar a palavra `publish` no seu comando, ele envelopará o processo num TTY simulado (usando o `script`). Isso força o NPM/PNPM a gerar a **URL de aprovação no navegador (WebAuthn)**, permitindo que agentes repassem o link no chat para você apenas clicar e aprovar o deploy!
 
 ### 4. Checar expiração dos tokens
 Verifica se algum token seu está expirando em menos de 14 dias e te notifica.
