@@ -66,9 +66,13 @@ async function cmdLogin() {
     console.log(chalk.red('Não foi possível identificar o usuário.'));
     return;
   }
-  console.log(chalk.green(`Logado como: ${username}`));
-
-  const bypass2fa = await confirm({ message: 'Deseja pular a etapa de 2FA em automações/instalações (Bypass 2FA)?' });
+  console.log(chalk.cyan(`Logado como: ${username}`));
+  
+  // NPM baniu GATs com bypass-2fa de fazerem publish.
+  const bypass2fa = await confirm({
+    message: 'Esse token será usado APENAS para instalações (CI/CD)? (Se você pretende usar para PUBLICAR pacotes, escolha NO)',
+    default: false
+  });
   
   let packagesArg: string[] = [];
   
