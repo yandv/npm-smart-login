@@ -86,17 +86,27 @@ async function cmdLogin() {
           scopesAndPkgs.add(p);
         }
       });
+      const scopes: string[] = [];
+      const purePkgs: string[] = [];
       
-      const targetList = Array.from(scopesAndPkgs);
-      console.log(chalk.green(`✓ Concedendo acesso total automaticamente aos escopos/pacotes: ${targetList.join(', ')}`));
+      Array.from(scopesAndPkgs).forEach(item => {
+        if (item.startsWith('@')) scopes.push(item);
+        else purePkgs.push(item);
+      });
       
-      // O npm aceita multiplos passados separadamente por virgula ou multiplas flags. 
-      // O mais seguro no CLI é passar separado por vírgula
-      packagesArg = ['--packages', targetList.join(',')];
+      packagesArg = [];
+      if (scopes.length > 0) packagesArg.push('--scopes', scopes.join(','));
+      if (purePkgs.length > 0) packagesArg.push('--packages', purePkgs.join(','));
+      
+      console.log(chalk.green(`✓ Concedendo acesso total automaticamente a: ${Array.from(scopesAndPkgs).join(', ')}`));
     } else {
       console.log(chalk.yellow(`Nenhum pacote encontrado para ${username}. Vamos solicitar manualmente.`));
-      const manualScope = await input({ message: 'Digite o escopo/pacote (ex: @sua-org ou @seu-user):', required: true });
-      packagesArg = ['--packages', manualScope];
+      const manualScope = await input({ message: 'Digite o escopo (ex: @sua-org) ou pacote:', required: true });
+      if (manualScope.startsWith('@')) {
+        packagesArg = ['--scopes', manualScope];
+      } else {
+        packagesArg = ['--packages', manualScope];
+      }
     }
   } else {
     packagesArg = ['--packages-all'];
