@@ -12,6 +12,31 @@ Desde que o NPM reduziu os tokens clássicos de terminal para **2 horas de dura�
 - **Comando `exec` (Temporário)**: Rode um comando numa conta específica sem precisar trocar o seu perfil global atual.
 - **Aviso de Expiração Inteligente**: Comando `check` que avisa no seu terminal se algum token estiver a menos de 14 dias de expirar.
 
+## 📦 Instalação
+
+Como essa é uma ferramenta em TypeScript nativo que usa o `tsx` (para execução instantânea sem build), a melhor forma de instalá-la no macOS/Linux é clonar e criar um link simbólico para a sua pasta de binários (ex: `~/.local/bin`):
+
+1. **Clone o repositório:**
+```bash
+git clone https://github.com/yandv/npm-smart-login.git ~/dev/npm-smart-login
+cd ~/dev/npm-smart-login
+```
+
+2. **Instale as dependências:**
+```bash
+pnpm install
+```
+
+3. **Crie o link simbólico global:**
+*(Certifique-se de que `~/.local/bin` está no seu `$PATH` no `~/.zshrc`)*
+```bash
+mkdir -p ~/.local/bin
+ln -s ~/dev/npm-smart-login/index.ts ~/.local/bin/npm-smart-login
+chmod +x ~/dev/npm-smart-login/index.ts
+```
+
+Pronto! Agora você pode chamar o comando `npm-smart-login` de qualquer lugar no seu terminal.
+
 ## 🚀 Como usar
 
 ### 1. Trocar de conta globalmente
