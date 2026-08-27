@@ -104,19 +104,20 @@ async function cmdLogin() {
 
   console.log(chalk.yellow('\n2. Gerando Token de Longa Duração (90 dias)...'));
   try {
-    const tokenCmd = execa('npm', ['token', 'create', '--json', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
-      stdio: ['inherit', 'pipe', 'inherit'],
+    const logFile = `/tmp/npm-smart-token-${Date.now()}.log`;
+    
+    // Usar 'script' garante um PTY real, então o NPM esconde a senha ao digitar
+    await execa('script', ['-q', logFile, 'npm', 'token', 'create', '--json', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
+      stdio: 'inherit',
       env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
     });
     
-    // Pipe the stdout to screen so the user can see 'npm password:' or WebAuthn links!
-    tokenCmd.stdout?.pipe(process.stdout);
-    
-    const { stdout } = await tokenCmd;
+    const output = fs.readFileSync(logFile, 'utf8');
+    if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
     
     // O NPM pode imprimir o prompt de senha no stdout antes do JSON. 
     // Vamos buscar apenas a parte do JSON no final da string.
-    const jsonStr = stdout.substring(stdout.indexOf('{'));
+    const jsonStr = output.substring(output.indexOf('{'), output.lastIndexOf('}') + 1);
     const tokenData = JSON.parse(jsonStr);
     if (!tokenData.token) {
       throw new Error('Token não retornado pelo NPM');
