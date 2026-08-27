@@ -112,14 +112,17 @@ async function cmdLogin() {
       env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
     });
     
-    const output = fs.readFileSync(logFile, 'utf8');
+    const rawOutput = fs.readFileSync(logFile, 'utf8');
     if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
+    
+    // Remover todos os códigos ANSI (cores) inseridos pelo 'script' (TTY falso)
+    const output = rawOutput.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
     
     // O NPM pode gerar múltiplos blocos JSON (um para WebAuthn link, outro pro token).
     // Para não quebrar o JSON.parse, usamos Regex direto no valor que importa:
     const tokenMatch = output.match(/"token":\s*"([^"]+)"/);
     if (!tokenMatch) {
-      throw new Error('Token não encontrado na resposta do NPM.');
+      throw new Error('Token não encontrado na resposta do NPM. O JSON retornado foi:\n' + output);
     }
 
     console.log(chalk.yellow('3. Salvando token de 90 dias no seu perfil...'));
@@ -137,8 +140,8 @@ async function cmdLogin() {
     saveConfig(config);
     
     console.log(chalk.green(`\n✅ Sucesso! Token criado e válido até ${expiresAt.toLocaleDateString()}`));
-  } catch (err) {
-    console.log(chalk.red('\n❌ Erro ao criar o token.'));
+  } catch (err: any) {
+    console.log(chalk.red('\n❌ Erro ao criar o token: ' + (err.message || err.toString())));
   }
 }
 
