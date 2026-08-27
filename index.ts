@@ -104,7 +104,20 @@ async function cmdLogin() {
 
   console.log(chalk.yellow('\n2. Gerando Token de Longa Duração (90 dias)...'));
   try {
-    await runNpm(['token', 'create', '--name', `smart-token-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])]);
+    const tokenCmd = await execa('npm', ['token', 'create', '--json', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
+      stdio: ['inherit', 'pipe', 'inherit'],
+      env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
+    });
+    
+    const tokenData = JSON.parse(tokenCmd.stdout);
+    if (!tokenData.token) {
+      throw new Error('Token não retornado pelo NPM');
+    }
+
+    console.log(chalk.yellow('3. Salvando token de 90 dias no seu perfil...'));
+    await execa('npm', ['config', 'set', '//registry.npmjs.org/:_authToken', tokenData.token], {
+      env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
+    });
     
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
