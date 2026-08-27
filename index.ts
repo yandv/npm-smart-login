@@ -125,9 +125,13 @@ async function cmdLogin() {
   try {
     const logFile = `/tmp/npm-smart-token-${Date.now()}.log`;
     
+    // Se o usuário quer publicar, PRECISAMOS garantir permissão de read-write.
+    // O padrão do NPM para GATs é apenas "read" (que causa erro 404 no publish).
+    const permissionArgs = bypass2fa ? [] : ['--packages-and-scopes-permission', 'read-write'];
+    
     // Usar 'script' garante um PTY real, então o NPM esconde a senha ao digitar
     // NÃO usamos --json porque o NPM v10+ censura o token (npm_***) no output JSON!
-    await execa('script', ['-q', logFile, 'npm', 'token', 'create', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
+    await execa('script', ['-q', logFile, 'npm', 'token', 'create', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...permissionArgs, ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
       stdio: 'inherit',
       env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
     });
