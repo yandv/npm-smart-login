@@ -107,7 +107,8 @@ async function cmdLogin() {
     const logFile = `/tmp/npm-smart-token-${Date.now()}.log`;
     
     // Usar 'script' garante um PTY real, então o NPM esconde a senha ao digitar
-    await execa('script', ['-q', logFile, 'npm', 'token', 'create', '--json', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
+    // NÃO usamos --json porque o NPM v10+ censura o token (npm_***) no output JSON!
+    await execa('script', ['-q', logFile, 'npm', 'token', 'create', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
       stdio: 'inherit',
       env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
     });
@@ -118,11 +119,10 @@ async function cmdLogin() {
     // Remover todos os códigos ANSI (cores) inseridos pelo 'script' (TTY falso)
     const output = rawOutput.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
     
-    // O NPM pode gerar múltiplos blocos JSON (um para WebAuthn link, outro pro token).
-    // Para não quebrar o JSON.parse, usamos Regex direto no valor que importa:
-    const tokenMatch = output.match(/"token":\s*"([^"]+)"/);
+    // O token no formato de tabela clássico do NPM é sempre npm_ seguido de 36 caracteres base62
+    const tokenMatch = output.match(/(npm_[a-zA-Z0-9]{36})/);
     if (!tokenMatch) {
-      throw new Error('Token não encontrado na resposta do NPM. O JSON retornado foi:\n' + output);
+      throw new Error('Token completo não encontrado na resposta do NPM. O texto retornado foi:\n' + output);
     }
 
     console.log(chalk.yellow('3. Salvando token de 90 dias no seu perfil...'));
