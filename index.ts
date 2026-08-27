@@ -69,10 +69,11 @@ async function cmdLogin() {
   console.log(chalk.cyan(`Logado como: ${username}`));
   
   // NPM baniu GATs com bypass-2fa de fazerem publish.
-  const bypass2fa = await confirm({
-    message: 'Esse token será usado APENAS para instalações (CI/CD)? (Se você pretende usar para PUBLICAR pacotes, escolha NO)',
-    default: false
+  const wantsPublish = await confirm({
+    message: 'Você vai usar esse perfil para PUBLICAR pacotes? (YES = 2FA ativado, NO = Apenas leitura/instalação)',
+    default: true
   });
+  const bypass2fa = !wantsPublish;
   
   let packagesArg: string[] = [];
   
