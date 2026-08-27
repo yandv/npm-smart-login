@@ -104,12 +104,20 @@ async function cmdLogin() {
 
   console.log(chalk.yellow('\n2. Gerando Token de Longa Duração (90 dias)...'));
   try {
-    const tokenCmd = await execa('npm', ['token', 'create', '--json', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
+    const tokenCmd = execa('npm', ['token', 'create', '--json', '--name', `smart-login-${Date.now()}`, '--expires', '90', ...packagesArg, ...(bypass2fa ? ['--bypass-2fa'] : [])], {
       stdio: ['inherit', 'pipe', 'inherit'],
       env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
     });
     
-    const tokenData = JSON.parse(tokenCmd.stdout);
+    // Pipe the stdout to screen so the user can see 'npm password:' or WebAuthn links!
+    tokenCmd.stdout?.pipe(process.stdout);
+    
+    const { stdout } = await tokenCmd;
+    
+    // O NPM pode imprimir o prompt de senha no stdout antes do JSON. 
+    // Vamos buscar apenas a parte do JSON no final da string.
+    const jsonStr = stdout.substring(stdout.indexOf('{'));
+    const tokenData = JSON.parse(jsonStr);
     if (!tokenData.token) {
       throw new Error('Token não retornado pelo NPM');
     }
