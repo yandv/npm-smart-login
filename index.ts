@@ -115,16 +115,15 @@ async function cmdLogin() {
     const output = fs.readFileSync(logFile, 'utf8');
     if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
     
-    // O NPM pode imprimir o prompt de senha no stdout antes do JSON. 
-    // Vamos buscar apenas a parte do JSON no final da string.
-    const jsonStr = output.substring(output.indexOf('{'), output.lastIndexOf('}') + 1);
-    const tokenData = JSON.parse(jsonStr);
-    if (!tokenData.token) {
-      throw new Error('Token não retornado pelo NPM');
+    // O NPM pode gerar múltiplos blocos JSON (um para WebAuthn link, outro pro token).
+    // Para não quebrar o JSON.parse, usamos Regex direto no valor que importa:
+    const tokenMatch = output.match(/"token":\s*"([^"]+)"/);
+    if (!tokenMatch) {
+      throw new Error('Token não encontrado na resposta do NPM.');
     }
 
     console.log(chalk.yellow('3. Salvando token de 90 dias no seu perfil...'));
-    await execa('npm', ['config', 'set', '//registry.npmjs.org/:_authToken', tokenData.token], {
+    await execa('npm', ['config', 'set', '//registry.npmjs.org/:_authToken', tokenMatch[1]], {
       env: { ...process.env, NPM_CONFIG_USERCONFIG: `${NPMRC_PATH}-${config.current}` }
     });
     
