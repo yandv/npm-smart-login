@@ -77,20 +77,18 @@ async function cmdLogin() {
   
   let packagesArg: string[] = [];
   
-  if (bypass2fa) {
-    console.log(chalk.yellow('\nBypass 2FA selecionado. Contornando o bloqueio do NPM buscando seus pacotes...'));
-    const pkgs = await getPackages();
-    
+  console.log(chalk.yellow('\nBuscando seus pacotes no registry para conceder acesso ao token (GAT exige pacotes explícitos)...'));
+  const searchCmd = await execa('npm', ['search', `@${username}`, '--json'], { reject: false });
+  
+  if (searchCmd.exitCode === 0 && searchCmd.stdout.trim() !== '') {
+    const pkgs = JSON.parse(searchCmd.stdout);
     if (pkgs.length > 0) {
-      // Extrair escopos únicos (ex: @greatapps) e pacotes soltos
       const scopesAndPkgs = new Set<string>();
-      pkgs.forEach(p => {
-        if (p.startsWith('@')) {
-          scopesAndPkgs.add(p.split('/')[0]); // Pega o escopo raiz
-        } else {
-          scopesAndPkgs.add(p);
-        }
+      pkgs.forEach((p: any) => {
+        if (p.name.startsWith('@')) scopesAndPkgs.add(p.name.split('/')[0]);
+        else scopesAndPkgs.add(p.name);
       });
+      
       const scopes: string[] = [];
       const purePkgs: string[] = [];
       
@@ -105,7 +103,7 @@ async function cmdLogin() {
       
       console.log(chalk.green(`✓ Concedendo acesso total automaticamente a: ${Array.from(scopesAndPkgs).join(', ')}`));
     } else {
-      console.log(chalk.yellow(`Nenhum pacote encontrado para ${username}. Vamos solicitar manualmente.`));
+      console.log(chalk.yellow(`A busca automática falhou. Vamos solicitar manualmente.`));
       const manualScope = await input({ message: 'Digite o escopo (ex: @sua-org) ou pacote:', required: true });
       if (manualScope.startsWith('@')) {
         packagesArg = ['--scopes', manualScope];
@@ -114,7 +112,13 @@ async function cmdLogin() {
       }
     }
   } else {
-    packagesArg = ['--packages-all'];
+    console.log(chalk.yellow(`A busca automática falhou. Vamos solicitar manualmente.`));
+    const manualScope = await input({ message: 'Digite o escopo (ex: @sua-org) ou pacote:', required: true });
+    if (manualScope.startsWith('@')) {
+      packagesArg = ['--scopes', manualScope];
+    } else {
+      packagesArg = ['--packages', manualScope];
+    }
   }
 
   console.log(chalk.yellow('\n2. Gerando Token de Longa Duração (90 dias)...'));
