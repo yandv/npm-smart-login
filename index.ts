@@ -224,20 +224,55 @@ async function cmdExec(account: string, args: string[]) {
     process.exit(1);
   }
 
-  let [cmd, ...cmdArgs] = args;
+  const isPublish = args.includes('publish');
   
-  console.log(chalk.cyan(`⚙️  Executando "${cmd} ${cmdArgs.join(' ')}" usando o perfil '${account}'...`));
-
-  // Magia: Se for um comando de publish, o NPM/PNPM em um terminal não-interativo (ex: agentes)
-  // bloqueia o link do WebAuthn e exige OTP. Para forçar ele a cuspir o link, simulamos um TTY com 'script'.
-  if ((cmd === 'npm' || cmd === 'pnpm') && cmdArgs.includes('publish')) {
-    console.log(chalk.yellow(`🪄  Modo Publish detectado. Forçando TTY interativo para exibir o link de aprovação (WebAuthn)...`));
-    cmdArgs = ['-q', '/dev/null', cmd, ...cmdArgs];
-    cmd = 'script';
-  }
-  
-  try {
-    await execa(cmd, cmdArgs, {
+  if (isPublish) {
+    console.log(chalk.yellow(`⚙️  Executando "${args.join(' ')}" usando o perfil '${account}'...`));
+    console.log(chalk.magenta('🪄  Modo Publish detectado. Forçando TTY interativo para exibir o link de aprovação (WebAuthn)...'));
+    
+    let execArgs = args;
+    let command = args[0];
+    
+    // O pnpm tem um bug conhecido ao lidar com o cabeçalho 401 WebAuthn de Granular Access Tokens.
+    // Ele acaba dando 404 em vez de mostrar o link. A solução é empacotar com pnpm e publicar com npm.
+    if (command === 'pnpm') {
+      console.log(chalk.cyan('🛠️  Interceptando "pnpm publish"... Resolvendo workspaces com pnpm e publicando via npm (Bypass de Bug do pnpm)'));
+      
+      // Remove o "publish" e args extras pra rodar só o pack
+      await execa('pnpm', ['pack'], {
+        stdio: 'inherit',
+        env: { ...process.env, NPM_CONFIG_USERCONFIG: targetPath, npm_config_userconfig: targetPath }
+      });
+      
+      // Encontrar o arquivo .tgz gerado
+      const files = fs.readdirSync(process.cwd());
+      const tgz = files.find(f => f.endsWith('.tgz'));
+      if (!tgz) throw new Error('Falha ao empacotar com pnpm. Nenhum arquivo .tgz encontrado.');
+      
+      console.log(chalk.cyan(`📦  Pacote gerado: ${tgz}. Publicando...`));
+      
+      // Substitui "pnpm publish" por "npm publish tgz"
+      const extraArgs = args.slice(2); // tudo depois de "pnpm publish"
+      command = 'npm';
+      execArgs = ['npm', 'publish', tgz, ...extraArgs];
+    }
+    
+    // O comando final (seja npm nativo ou npm após pnpm pack)
+    await execa('script', ['-q', '/dev/null', ...execArgs], {
+      stdio: 'inherit',
+      env: { ...process.env, NPM_CONFIG_USERCONFIG: targetPath, npm_config_userconfig: targetPath }
+    });
+    
+    // Limpar o tgz gerado se foi pnpm
+    if (command === 'npm' && args[0] === 'pnpm') {
+      const files = fs.readdirSync(process.cwd());
+      const tgz = files.find(f => f.endsWith('.tgz'));
+      if (tgz) fs.unlinkSync(tgz);
+    }
+    
+  } else {
+    // Modo normal
+    await execa(args[0], args.slice(1), {
       stdio: 'inherit',
       env: {
         ...process.env,
@@ -245,8 +280,6 @@ async function cmdExec(account: string, args: string[]) {
         npm_config_userconfig: targetPath
       }
     });
-  } catch (err) {
-    process.exit(1);
   }
 }
 
