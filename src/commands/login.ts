@@ -5,6 +5,7 @@ import { loadConfig, saveConfig } from '../config-store.js';
 import { calculateExpiry } from '../expiry.js';
 import { createToken, npmLogin, saveAuthToken, searchOwnedPackageNames, whoami } from '../npm.js';
 import { profilePath, type Paths } from '../paths.js';
+import { clearPnpmAuthIni } from '../pnpm-auth.js';
 import { extractToken, stripAnsi } from '../token-output.js';
 import { buildAccessArgs, buildManualAccessArgs, listAccessTargets } from '../token-scopes.js';
 
@@ -75,6 +76,7 @@ export async function runLogin(paths: Paths): Promise<void> {
     const expiresAt = calculateExpiry(new Date());
     config.accounts[config.current] = { expiresAt: expiresAt.toISOString(), npmrcPath: userConfig };
     saveConfig(paths.config, config);
+    await clearPnpmAuthIni();
 
     console.log(chalk.green(`\n✅ Sucesso! Token criado e válido até ${expiresAt.toLocaleDateString()}`));
   } catch (err) {

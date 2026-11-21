@@ -53,6 +53,10 @@ npm-smart-login check
 
 Profile metadata (current account and token expiry dates) lives in `~/.npm-smart-login.json`. Tokens stay in the per-profile `.npmrc` files, never in that file.
 
+## pnpm and `auth.ini`
+
+pnpm 11 reads the `auth.ini` of its global config directory (`~/Library/Preferences/pnpm/` on macOS) above `~/.npmrc` and `npm_config_userconfig`. A token left there by `pnpm login` or `pnpm config set` freezes pnpm on a credential that switching accounts and renewing never reach, and the expired token shows up as a **404 on private packages** while `npm` keeps working. So `switch`, `login` and `exec` remove that token (`pnpm config delete --global //registry.npmjs.org/:_authToken`) and `check` warns when it comes back. Do not run `pnpm login` or `pnpm config set` with a token: the active profile is the only source.
+
 ## Development
 
 ```bash
