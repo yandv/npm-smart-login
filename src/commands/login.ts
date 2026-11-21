@@ -6,7 +6,7 @@ import { calculateExpiry } from '../expiry.js';
 import { createToken, npmLogin, saveAuthToken, searchOwnedPackageNames, whoami } from '../npm.js';
 import { profilePath, type Paths } from '../paths.js';
 import { clearPnpmAuthIni } from '../pnpm-auth.js';
-import { extractToken, stripAnsi } from '../token-output.js';
+import { extractToken, isIncorrectPasswordLog, stripAnsi } from '../token-output.js';
 import { buildAccessArgs, buildManualAccessArgs, listAccessTargets } from '../token-scopes.js';
 
 async function askAccessArgsManually(): Promise<string[]> {
@@ -58,12 +58,12 @@ export async function runLogin(paths: Paths): Promise<void> {
   }
 
   console.log(chalk.yellow('\n2. Gerando Token de Longa Duração (90 dias)...'));
+  console.log(chalk.cyan(`O npm vai pedir a SENHA da conta ${username} no npmjs.com (não é a do Google/GitHub nem a sessão do browser) e depois abrir o 2FA.`));
+  const logFile = `/tmp/npm-smart-token-${Date.now()}.log`;
   try {
-    const logFile = `/tmp/npm-smart-token-${Date.now()}.log`;
     await createToken({ logFile, userConfig, accessArgs, canPublish });
 
     const output = stripAnsi(fs.readFileSync(logFile, 'utf8'));
-    if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
 
     const token = extractToken(output);
     if (!token) {
@@ -80,6 +80,14 @@ export async function runLogin(paths: Paths): Promise<void> {
 
     console.log(chalk.green(`\n✅ Sucesso! Token criado e válido até ${expiresAt.toLocaleDateString()}`));
   } catch (err) {
-    console.log(chalk.red('\n❌ Erro ao criar o token: ' + (err instanceof Error ? err.message : String(err))));
+    const npmOutput = fs.existsSync(logFile) ? fs.readFileSync(logFile, 'utf8') : '';
+    if (isIncorrectPasswordLog(npmOutput)) {
+      console.log(chalk.red(`\n❌ O npm recusou a senha digitada para a conta ${username}. O login pelo browser e o 2FA passaram; só a senha não bateu.`));
+      console.log(chalk.yellow('Rode "npm-smart-login login" de novo e digite a senha do npmjs.com. Esqueceu? https://www.npmjs.com/forgot'));
+    } else {
+      console.log(chalk.red('\n❌ Erro ao criar o token: ' + (err instanceof Error ? err.message : String(err))));
+    }
+  } finally {
+    if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
   }
 }
