@@ -1,6 +1,6 @@
 import { fc, test } from '@fast-check/vitest';
 import { describe, expect, it } from 'vitest';
-import { extractToken, stripAnsi } from './token-output.js';
+import { extractToken, stripAnsi } from '../src/token-output.js';
 
 describe('token output', () => {
   const token = 'npm_' + 'aB3'.repeat(12);

@@ -1,6 +1,6 @@
 import { fc, test } from '@fast-check/vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { calculateExpiry, checkExpiry, type ExpiryStatus } from './expiry.js';
+import { calculateExpiry, checkExpiry, type ExpiryStatus } from '../src/expiry.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

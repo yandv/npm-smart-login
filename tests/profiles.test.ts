@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { loadConfig, saveConfig } from './config-store.js';
-import { resolvePaths, type Paths } from './paths.js';
-import { switchProfile } from './profiles.js';
+import { loadConfig, saveConfig } from '../src/config-store.js';
+import { resolvePaths, type Paths } from '../src/paths.js';
+import { switchProfile } from '../src/profiles.js';
 
 describe('switchProfile', () => {
   let home: string;

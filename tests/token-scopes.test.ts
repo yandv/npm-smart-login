@@ -1,6 +1,6 @@
 import { fc, test } from '@fast-check/vitest';
 import { describe, expect, it } from 'vitest';
-import { buildAccessArgs, buildManualAccessArgs, listAccessTargets } from './token-scopes.js';
+import { buildAccessArgs, buildManualAccessArgs, listAccessTargets } from '../src/token-scopes.js';
 
 describe('token scopes', () => {
   describe('automatic access from searched packages', () => {

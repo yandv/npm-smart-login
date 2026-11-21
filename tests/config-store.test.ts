@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fc, test } from '@fast-check/vitest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { loadConfig, saveConfig, type Config } from './config-store.js';
+import { loadConfig, saveConfig, type Config } from '../src/config-store.js';
 
 describe('config store', () => {
   let home: string;

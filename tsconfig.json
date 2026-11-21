@@ -14,5 +14,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src", "index.ts", "vitest.config.ts"]
+  "include": ["src", "tests", "index.ts", "vitest.config.ts"]
 }
