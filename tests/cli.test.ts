@@ -19,7 +19,7 @@ describe('cli', () => {
 
   // Runs the real entry point with a throwaway HOME so the real ~/.npmrc is never touched.
   function runCli(...args: string[]) {
-    return execa('tsx', ['src/cli.ts', ...args], { preferLocal: true, reject: false, env: { HOME: home, USERPROFILE: home } });
+    return execa('node', ['dist/cli.js', ...args], { reject: false, env: { HOME: home, USERPROFILE: home } });
   }
 
   function writeConfigExpiringAt(expiresAt: Date) {
