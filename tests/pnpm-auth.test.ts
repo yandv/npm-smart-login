@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execa } from 'execa';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { isIncorrectPasswordLog } from '../src/token-output.js';
 
 const DELETE_CALL = 'config delete --global //registry.npmjs.org/:_authToken\n';
 
@@ -91,5 +92,15 @@ describe('pnpm auth.ini guard', () => {
     await runCli('exec', 'ghost', 'node', '-v');
 
     expect(fs.existsSync(callsLog)).toBe(false);
+  });
+});
+
+describe('incorrect password detection', () => {
+  it('recognizes the npm message in the captured log', () => {
+    expect(isIncorrectPasswordLog('npm error code E401\nnpm error Incorrect password.')).toBe(true);
+  });
+
+  it('ignores logs without the message', () => {
+    expect(isIncorrectPasswordLog('npm error code EOTP')).toBe(false);
   });
 });

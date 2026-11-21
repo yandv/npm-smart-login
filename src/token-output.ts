@@ -11,3 +11,7 @@ export function stripAnsi(text: string): string {
 export function extractToken(output: string): string | null {
   return output.match(NPM_TOKEN)?.[1] ?? null;
 }
+
+export function isIncorrectPasswordLog(log: string): boolean {
+  return log.includes('Incorrect password');
+}
