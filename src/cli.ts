@@ -15,10 +15,10 @@ switch (command.name) {
     await runLogin(paths);
     break;
   case 'switch':
-    runSwitch(paths, command.account);
+    await runSwitch(paths, command.account);
     break;
   case 'check':
-    runCheck(paths, new Date());
+    await runCheck(paths, new Date());
     break;
   case 'exec':
     await runExec(paths, command.account, command.command);

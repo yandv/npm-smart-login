@@ -1,5 +1,7 @@
 import { execa } from 'execa';
 
+export const NPM_AUTH_TOKEN_KEY = '//registry.npmjs.org/:_authToken';
+
 export function npmLogin() {
   return execa('npm', ['login'], { stdio: 'inherit' });
 }
@@ -54,7 +56,7 @@ export async function createToken(options: {
 }
 
 export async function saveAuthToken(token: string, userConfig: string): Promise<void> {
-  await execa('npm', ['config', 'set', '//registry.npmjs.org/:_authToken', token], {
+  await execa('npm', ['config', 'set', NPM_AUTH_TOKEN_KEY, token], {
     env: { ...process.env, NPM_CONFIG_USERCONFIG: userConfig },
   });
 }

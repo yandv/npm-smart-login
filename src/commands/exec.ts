@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { execa } from 'execa';
 import chalk from 'chalk';
 import { profilePath, type Paths } from '../paths.js';
+import { clearPnpmAuthIni } from '../pnpm-auth.js';
 
 export async function runExec(paths: Paths, account: string, args: string[]): Promise<void> {
   const targetPath = profilePath(paths, account);
@@ -16,6 +17,8 @@ export async function runExec(paths: Paths, account: string, args: string[]): Pr
     console.log(chalk.red('❌ Forneça o comando a ser executado. Ex: npm-smart-login exec trabalho pnpm publish'));
     process.exit(1);
   }
+
+  await clearPnpmAuthIni();
 
   const env = { ...process.env, NPM_CONFIG_USERCONFIG: targetPath, npm_config_userconfig: targetPath };
 
