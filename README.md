@@ -1,5 +1,7 @@
 # npm-smart-login
 
+[![CI](https://github.com/yandv/npm-smart-login/actions/workflows/ci.yml/badge.svg)](https://github.com/yandv/npm-smart-login/actions/workflows/ci.yml)
+
 A CLI to keep several npm and pnpm accounts on the same machine and log into each one with a 90-day granular access token.
 
 npm cut classic terminal sessions down to two hours. If you publish or install private packages from more than one account, that means logging in again all day. `npm-smart-login` creates a granular access token per account, keeps one `.npmrc` per profile and swaps them for you.
@@ -15,16 +17,17 @@ npm cut classic terminal sessions down to two hours. If you publish or install p
 
 ## Install
 
-It is a TypeScript script run by `tsx`, with no build step. On macOS or Linux:
+It is a TypeScript CLI compiled to `dist/`. On macOS or Linux (Node.js 22 or newer):
 
 ```bash
 git clone https://github.com/yandv/npm-smart-login.git ~/dev/npm-smart-login
 cd ~/dev/npm-smart-login
 pnpm install
+pnpm build
 
 mkdir -p ~/.local/bin
-chmod +x ~/dev/npm-smart-login/index.ts
-ln -s ~/dev/npm-smart-login/index.ts ~/.local/bin/npm-smart-login
+chmod +x ~/dev/npm-smart-login/dist/cli.js
+ln -s ~/dev/npm-smart-login/dist/cli.js ~/.local/bin/npm-smart-login
 ```
 
 Make sure `~/.local/bin` is on your `PATH`.
@@ -50,9 +53,20 @@ npm-smart-login check
 
 Profile metadata (current account and token expiry dates) lives in `~/.npm-smart-login.json`. Tokens stay in the per-profile `.npmrc` files, never in that file.
 
+## Development
+
+```bash
+pnpm install
+pnpm test        # Vitest, including property tests with fast-check
+pnpm typecheck
+pnpm build       # compiles src/ to dist/
+```
+
+Tests run against a throwaway `HOME`, so they never touch your real `~/.npmrc` or npm accounts.
+
 ## Built with
 
-Node.js, TypeScript, tsx, Inquirer, Execa and Chalk.
+Node.js, TypeScript, Vitest, Inquirer, Execa and Chalk.
 
 ## License
 
